@@ -191,7 +191,7 @@ function deserializeEnum({name, values, dbName}: DMMF.DatamodelEnum) {
 	return `
 enum ${name} {
 	${outputValues.join('\n\t')}
-	${handleDbName(dbName)}
+	${handleDbName(dbName || null)}
 }`;
 }
 
