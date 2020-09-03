@@ -40,9 +40,13 @@ export interface Model extends DMMF.Model {
 	uniqueFields: string[][];
 }
 
-const handlers = type => {
+const handlers = (type, kind) => {
 	return {
 		default: value => {
+			if (kind === 'enum') {
+				return `@default(${value})`;
+			}
+
 			if (type === 'Boolean') {
 				return `@default(${value})`;
 			}
@@ -63,7 +67,7 @@ const handlers = type => {
 				return `@default("${value}")`;
 			}
 
-			throw new Error(`Unsupporter field attribute ${value}`);
+			throw new Error(`Unsupported field attribute ${value}`);
 		},
 		isId: value => value ? '@id' : '',
 		isUnique: value => value ? '@unique' : '',
@@ -84,7 +88,7 @@ const handlers = type => {
 function handleAttributes(attributes: Attribute, kind: DMMF.DatamodelFieldKind | DMMF.FieldKind, type: string) {
 	const {relationFromFields, relationToFields, relationName} = attributes;
 	if (kind === 'scalar') {
-		return `${Object.keys(attributes).map(each => handlers(type)[each](attributes[each])).join(' ')}`;
+		return `${Object.keys(attributes).map(each => handlers(type, kind)[each](attributes[each])).join(' ')}`;
 	}
 
 	if (kind === 'object' && relationFromFields) {
@@ -94,7 +98,7 @@ function handleAttributes(attributes: Attribute, kind: DMMF.DatamodelFieldKind |
 	}
 
 	if (kind && 'enum')
-		return `${Object.keys(attributes).map(each => handlers(type)[each](attributes[each])).join(' ')}`;
+		return `${Object.keys(attributes).map(each => handlers(type, kind)[each](attributes[each])).join(' ')}`;
 
 	return '';
 }
