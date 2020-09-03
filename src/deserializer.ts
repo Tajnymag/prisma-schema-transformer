@@ -93,6 +93,9 @@ function handleAttributes(attributes: Attribute, kind: DMMF.DatamodelFieldKind |
 			`@relation(name: "${relationName}")`;
 	}
 
+	if (kind && 'enum')
+		return `${Object.keys(attributes).map(each => handlers(type)[each](attributes[each])).join(' ')}`;
+
 	return '';
 }
 
