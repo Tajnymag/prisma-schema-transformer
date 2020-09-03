@@ -108,6 +108,10 @@ function handleFields(fields: Field[]) {
 				return `  ${name} ${type}${isList ? '[]' : (isRequired ? '' : '?')} ${handleAttributes(attributes, kind, type)}`;
 			}
 
+			if (kind === 'enum') {
+				return `  ${name} ${type}${isList ? '[]' : (isRequired ? '' : '?')} ${handleAttributes(attributes, kind, type)}`;
+			}
+
 			throw new Error(`Unsupported field kind "${kind}"`);
 		}).join('\n');
 }
@@ -161,8 +165,8 @@ function deserializeDatasource(datasource: DataSource) {
 
 	return `
 datasource ${name} {
-${handleProvider(provider)}
-${handleUrl(url)}
+	${handleProvider(provider)}
+	${handleUrl(url)}
 }`;
 }
 
@@ -171,9 +175,23 @@ function deserializeGenerator(generator: GeneratorConfig) {
 
 	return `
 generator ${name} {
-${handleProvider(provider)}
-${handleOutput(output)}
-${handleBinaryTargets(binaryTargets)}
+	${handleProvider(provider)}
+	${handleOutput(output)}
+	${handleBinaryTargets(binaryTargets)}
+}`;
+}
+
+function deserializeEnum({name, values, dbName}: DMMF.DatamodelEnum) {
+	const outputValues = values.map(({ name, dbName }) => {
+		let result = name
+		if (name !== dbName && dbName)
+			result += `@map("${dbName}")`
+		return result
+	})
+	return `
+enum ${name} {
+	${outputValues.join('\n\t')}
+	${handleDbName(dbName)}
 }`;
 }
 
@@ -190,4 +208,8 @@ export async function datasourcesDeserializer(datasources: DataSource[]) {
 
 export async function generatorsDeserializer(generators: GeneratorConfig[]) {
 	return generators.map(generator => deserializeGenerator(generator)).join('\n');
+}
+
+export async function dmmfEnumsDeserializer(enums: DMMF.DatamodelEnum[]) {
+	return enums.map(each => deserializeEnum(each)).join('\n');
 }
